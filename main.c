@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
     free_cpu(cpu);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    Log("Cleaned up! Exiting with status code 0", 0);
 
     return 0;
 }
