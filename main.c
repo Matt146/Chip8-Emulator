@@ -56,6 +56,9 @@ int main(int argc, char** argv) {
         }
     }
 
+    // Execute the program
+    Log("Starting execution...", 0);
+
     // Mainloop
     bool running = true;
     SDL_Event ev;
@@ -66,12 +69,79 @@ int main(int argc, char** argv) {
                     if (ev.key.keysym.sym == SDLK_ESCAPE) {
                         running = false;
                     }
+                    switch (ev.key.keysym.sym) {
+                        case SDLK_x:
+                            // map to "0" key
+                            cpu_log_io(cpu, 'x');
+                            break;
+                        case SDLK_1:
+                            // map to "1" key
+                            cpu_log_io(cpu, '1');
+                            break;
+                        case SDLK_2:
+                            // map to "2" key
+                            cpu_log_io(cpu, '2');
+                            break;
+                        case SDLK_3:
+                            // map to "3" key
+                            cpu_log_io(cpu, '3');
+                            break;
+                        case SDLK_4:
+                            // map to "c" key
+                            cpu_log_io(cpu, 'c');
+                            break;
+                        case SDLK_q:
+                            // map to "4" key
+                            cpu_log_io(cpu, '4');
+                            break;
+                        case SDLK_w:
+                            // map to "5" key
+                            cpu_log_io(cpu, '5');
+                            break;
+                        case SDLK_e:
+                            // map to "6" key
+                            cpu_log_io(cpu, '6');
+                            break;
+                        case SDLK_r:
+                            // map to "d" key
+                            cpu_log_io(cpu, 'd');
+                            break;
+                        case SDLK_a:
+                            // map to "a" key
+                            cpu_log_io(cpu, '7');
+                            break;
+                        case SDLK_s:
+                            // map to "8" key
+                            cpu_log_io(cpu, '8');
+                            break;
+                        case SDLK_d:
+                            // map to "9" key
+                            cpu_log_io(cpu, '9');
+                            break;
+                        case SDLK_f:
+                            // map to "e" key
+                            cpu_log_io(cpu, 'e');
+                            break;
+                        case SDLK_z:
+                            // map to "a" key
+                            cpu_log_io(cpu, 'a');
+                            break;
+                        case SDLK_c:
+                            // map to "b" key
+                            cpu_log_io(cpu, 'b');
+                            break;
+                        case SDLK_v:
+                            // map to "f" key
+                            cpu_log_io(cpu, 'f');
+                            break;
+                    }
                 case SDL_QUIT:
                     running = false;
             }
         }
 
         // Loop operations here
+        cpu_emulate(cpu);
 
         // Render here
         SDL_RenderClear(renderer);
