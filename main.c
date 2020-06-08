@@ -57,6 +57,7 @@ int main(int argc, char** argv) {
     }
 
     // Execute the program
+    printf("0x%x\n", cpu->memory[0x218]);
     Log("Starting execution...", 0);
 
     // Mainloop
@@ -72,67 +73,67 @@ int main(int argc, char** argv) {
                     switch (ev.key.keysym.sym) {
                         case SDLK_x:
                             // map to "0" key
-                            cpu_log_io(cpu, 'x');
+                            cpu_log_io(cpu, 0x0);
                             break;
                         case SDLK_1:
                             // map to "1" key
-                            cpu_log_io(cpu, '1');
+                            cpu_log_io(cpu, 0x1);
                             break;
                         case SDLK_2:
                             // map to "2" key
-                            cpu_log_io(cpu, '2');
+                            cpu_log_io(cpu, 0x2);
                             break;
                         case SDLK_3:
                             // map to "3" key
-                            cpu_log_io(cpu, '3');
+                            cpu_log_io(cpu, 0x3);
                             break;
                         case SDLK_4:
                             // map to "c" key
-                            cpu_log_io(cpu, 'c');
+                            cpu_log_io(cpu, 0xc);
                             break;
                         case SDLK_q:
                             // map to "4" key
-                            cpu_log_io(cpu, '4');
+                            cpu_log_io(cpu, 0x4);
                             break;
                         case SDLK_w:
                             // map to "5" key
-                            cpu_log_io(cpu, '5');
+                            cpu_log_io(cpu, 0x5);
                             break;
                         case SDLK_e:
                             // map to "6" key
-                            cpu_log_io(cpu, '6');
+                            cpu_log_io(cpu, 0x6);
                             break;
                         case SDLK_r:
                             // map to "d" key
-                            cpu_log_io(cpu, 'd');
+                            cpu_log_io(cpu, 0xd);
                             break;
                         case SDLK_a:
-                            // map to "a" key
-                            cpu_log_io(cpu, '7');
+                            // map to "7" key
+                            cpu_log_io(cpu, 0x7);
                             break;
                         case SDLK_s:
                             // map to "8" key
-                            cpu_log_io(cpu, '8');
+                            cpu_log_io(cpu, 0x8);
                             break;
                         case SDLK_d:
                             // map to "9" key
-                            cpu_log_io(cpu, '9');
+                            cpu_log_io(cpu, 0x9);
                             break;
                         case SDLK_f:
                             // map to "e" key
-                            cpu_log_io(cpu, 'e');
+                            cpu_log_io(cpu, 0xe);
                             break;
                         case SDLK_z:
                             // map to "a" key
-                            cpu_log_io(cpu, 'a');
+                            cpu_log_io(cpu, 0xa);
                             break;
                         case SDLK_c:
                             // map to "b" key
-                            cpu_log_io(cpu, 'b');
+                            cpu_log_io(cpu, 0xb);
                             break;
                         case SDLK_v:
                             // map to "f" key
-                            cpu_log_io(cpu, 'f');
+                            cpu_log_io(cpu, 0xf);
                             break;
                     }
                 case SDL_QUIT:
@@ -142,6 +143,8 @@ int main(int argc, char** argv) {
 
         // Loop operations here
         cpu_emulate(cpu);
+        cpu_flush_io_buffer(cpu);
+        printf("0x%x\n", cpu->pc);
 
         // Render here
         SDL_RenderClear(renderer);

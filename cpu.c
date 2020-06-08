@@ -14,7 +14,10 @@ cpu_t* init_cpu() {
     // Initialize the registers;
     unsigned short subroutine_nesting = 0;
 
-    // Preload some sprites
+    // Initialize io buffer
+    for (size_t i = 0; i < sizeof(cpu->io_buff) / sizeof(char); i++) {
+        cpu->io_buff[i] = -127;
+    }
 
     //  return the CPU
     return cpu;
@@ -55,6 +58,12 @@ void cpu_log_io(cpu_t* cpu, char input) {
     int array_size = sizeof(cpu->io_buff) / sizeof(char);
     if (array_size < 256) {
         cpu->io_buff[array_size-1] = input;
+    }
+}
+
+void cpu_flush_io_buffer(cpu_t* cpu) {
+    for (size_t i = 0; i < sizeof(cpu->io_buff) / sizeof(char); i++) {
+        cpu->io_buff[i] = -127;
     }
 }
 
@@ -223,9 +232,118 @@ void cpu_instr_d(cpu_t* cpu, unsigned char reg1, unsigned char reg2, unsigned ch
     free(sprite_data);
 }
 
+void cpu_instr_skp(cpu_t* cpu, unsigned char reg1) {
+    for (size_t i = 0; i < sizeof(cpu->io_buff)/sizeof(char); i++) {
+        if (cpu->io_buff[i] == cpu->reg[reg1]) {
+            cpu->pc += 2;
+        }
+    }
+}
+
+void cpu_instr_sknp(cpu_t* cpu, unsigned char reg1) {
+    // detect if the key has been pressed in the io buffer
+    bool pressed = false;
+    for (size_t i = 0; i < sizeof(cpu->io_buff)/sizeof(char); i++) {
+        if (cpu->io_buff[i] == cpu->reg[reg1]) {
+            pressed = true;
+        }
+    }
+
+    // if it hasn't, inc the program counter
+    if (pressed == false) {
+        cpu->pc += 2;
+    }
+}
+
+void cpu_instr_lddt(cpu_t* cpu, unsigned char reg) {
+    cpu->reg[reg] = cpu->time_delay;
+}
+
+void cpu_instr_ldio(cpu_t* cpu, unsigned char reg) {
+    while (SDL_PollEvent(&(cpu->ev))) {
+        switch (cpu->ev.type) {
+            case SDL_KEYDOWN:
+                switch (cpu->ev.type) {
+                    case SDL_KEYDOWN:
+                        switch (cpu->ev.key.keysym.sym) {
+                            case SDLK_x:
+                                // map to "0" key
+                                cpu_log_io(cpu, 0x0);
+                                break;
+                            case SDLK_1:
+                                // map to "1" key
+                                cpu_log_io(cpu, 0x1);
+                                break;
+                            case SDLK_2:
+                                // map to "2" key
+                                cpu_log_io(cpu, 0x2);
+                                break;
+                            case SDLK_3:
+                                // map to "3" key
+                                cpu_log_io(cpu, 0x3);
+                                break;
+                            case SDLK_4:
+                                // map to "c" key
+                                cpu_log_io(cpu, 0xc);
+                                break;
+                            case SDLK_q:
+                                // map to "4" key
+                                cpu_log_io(cpu, 0x4);
+                                break;
+                            case SDLK_w:
+                                // map to "5" key
+                                cpu_log_io(cpu, 0x5);
+                                break;
+                            case SDLK_e:
+                                // map to "6" key
+                                cpu_log_io(cpu, 0x6);
+                                break;
+                            case SDLK_r:
+                                // map to "d" key
+                                cpu_log_io(cpu, 0xd);
+                                break;
+                            case SDLK_a:
+                                // map to "7" key
+                                cpu_log_io(cpu, 0x7);
+                                break;
+                            case SDLK_s:
+                                // map to "8" key
+                                cpu_log_io(cpu, 0x8);
+                                break;
+                            case SDLK_d:
+                                // map to "9" key
+                                cpu_log_io(cpu, 0x9);
+                                break;
+                            case SDLK_f:
+                                // map to "e" key
+                                cpu_log_io(cpu, 0xe);
+                                break;
+                            case SDLK_z:
+                                // map to "a" key
+                                cpu_log_io(cpu, 0xa);
+                                break;
+                            case SDLK_c:
+                                // map to "b" key
+                                cpu_log_io(cpu, 0xb);
+                                break;
+                            case SDLK_v:
+                                // map to "f" key
+                                cpu_log_io(cpu, 0xf);
+                                break;
+                        }
+                }
+        }
+    }
+}
+
+void cpu_instr_lddt1(cpu_t* cpu, unsigned char reg) {
+    cpu->time_delay = cpu->reg[reg];
+}
+
 void cpu_emulate(cpu_t* cpu) {
     unsigned short instruction = cpu->memory[cpu->pc] << 8 | cpu->memory[cpu->pc+1];
     Log("Emulating!", 0);
+    printf("\t0x%x\n", instruction);
     if (instruction == 0x00E0) {
         // CLS instruction
         cpu_instr_cls(cpu);
@@ -234,11 +352,14 @@ void cpu_emulate(cpu_t* cpu) {
         cpu_instr_ret(cpu);
     } else if (cpu->memory[cpu->pc] >> 4 == 0x1) {
         // jp instruction
-        unsigned short addr = cpu->memory[cpu->pc] >> 4 | cpu->memory[cpu->pc+1];
+        printf("Loc: 0x%x\n", cpu->memory[cpu->pc] & 0x0f);
+        printf("Loc: 0x%x\n", (cpu->memory[cpu->pc] & 0x0f) << 8);
+        unsigned short addr = ((cpu->memory[cpu->pc] & 0x0f) << 8) | cpu->memory[cpu->pc+1];
+        printf("Loc: 0x%x\n", addr);
         cpu_instr_jp(cpu, addr);
     } else if (cpu->memory[cpu->pc] >> 4 == 0x2) {
         // call instruction
-        unsigned short addr = cpu->memory[cpu->pc] & 0x0f | cpu->memory[cpu->pc+1];
+        unsigned short addr = ((cpu->memory[cpu->pc] & 0x0f) << 8) | cpu->memory[cpu->pc+1];
         cpu_instr_call(cpu, addr);
     } else if (cpu->memory[cpu->pc] >> 4 == 0x3) {
         // skip next instruction (reg-value) equal instruction
@@ -323,7 +444,7 @@ void cpu_emulate(cpu_t* cpu) {
         cpu_instr_a(cpu, val);
     } else if (cpu->memory[cpu->pc] >> 4 == 0xb) {
         // b; jump to location nnn+V0
-        unsigned char addr = cpu->memory[cpu->pc] & 0x0f | cpu->memory[cpu->pc+1];
+        unsigned char addr = ((cpu->memory[cpu->pc] & 0x0f) << 8) | cpu->memory[cpu->pc+1];
         cpu_instr_b(cpu, addr);
     } else if (cpu->memory[cpu->pc] >> 4 == 0xc) {
         // c; set vx = random byte and kk
@@ -335,8 +456,27 @@ void cpu_emulate(cpu_t* cpu) {
         unsigned char reg2 = cpu->memory[cpu->pc + 1] >> 4;
         unsigned char n = cpu->memory[cpu->pc + 1] & 0x0f;
         cpu_instr_d(cpu, reg1, reg2, n);
-    } else if (cpu->memory[cpu->pc] >> 4 == 0xe) {
-        // ex9e; skip next instruction if key with the value of vx is pressed
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xe && cpu->memory[cpu->pc + 1] == 0x9e) {
+        // skp; skip next instruction if key with the value of vx is pressed
+        unsigned char reg1 = cpu->memory[cpu->pc] & 0x0f;
+        cpu_instr_skp(cpu, reg1);
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xe && cpu->memory[cpu->pc + 1] == 0xa1) {
+        // sknp; skip next instruction if key with value of vx is NOT pressed
+        unsigned char reg1 = cpu->memory[cpu->pc] & 0x0f;
+        cpu_instr_sknp(cpu, reg1);
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xf && cpu->memory[cpu->pc + 1] == 0x07) {
+        // set vx = delay timer value
+        unsigned char reg = cpu->memory[cpu->pc] & 0x0f;
+        cpu_instr_lddt(cpu, reg);
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xf && cpu->memory[cpu->pc + 1] == 0x0a) {
+        // ldio; wait for a key press, store the value in vx
+        unsigned char reg = cpu->memory[cpu->pc] & 0x0f;
+        cpu_instr_ldio(cpu, reg);
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xf && cpu->memory[cpu->pc + 1] == 0x15) {
+        // set delay timer = vx;
+        unsigned char reg = cpu->memory[cpu->pc] & 0x0f;
+        cpu_instr_lddt1(cpu, reg);
+    } else if (cpu->memory[cpu->pc] >> 4 == 0xf && cpu->memory[cpu->pc + 1] == 0x18) {
 
     }
 
